@@ -8,7 +8,9 @@
 Agregar
 
 * Delay 5s  (Ej. Hay que retrasar el flujo para dar tiempo a algun mecanismo)
-* Trigger   (Envia un msg, espera y envia otro. Ej. Para activar por 5 segundos una salida)
+* Trigger   (Envia un msg, espera y envia otro. 
+  * Ej. Para activar por 5'' una puerta de salida
+  * Ej. Para enecender una luz por 1' 
   
 Agregar
 
@@ -121,6 +123,14 @@ Agrupar algunos nodos en un subblow
 * Es horrible, lo detesto, espantoso.
 
 Ej. Ej. sensar twiter
+
+
+
+## Documentar nodos
+
+Utilizar [Markdown}(https://markdown.es/)
+
+Se puede utilizar [Mermaid](https://mermaid.js.org/) -> ([editor Mermaind online](https://mermaid.live/))
 
 ## Extras para recomendar
 
