@@ -4,6 +4,8 @@ services:
     image: eclipse-mosquitto
     volumes:
       - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    ports:
+      - "1883:1883"
 
   influxdb:
     image: influxdb:1.8
