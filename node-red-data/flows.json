@@ -8,6 +8,14 @@
         "env": []
     },
     {
+        "id": "1e0ab7d6c14603f8",
+        "type": "tab",
+        "label": "Flow 2",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
         "id": "8a8d42f596ef2b29",
         "type": "mqtt-broker",
         "name": "mqtt",
@@ -54,6 +62,33 @@
         "rejectUnauthorized": true
     },
     {
+        "id": "87e4aeee429d87e6",
+        "type": "telegram bot",
+        "botname": "AvisoContenedor_bot",
+        "usernames": "",
+        "chatids": "8604741403",
+        "baseapiurl": "",
+        "testenvironment": false,
+        "updatemode": "polling",
+        "pollinterval": 300,
+        "usesocks": false,
+        "sockshost": "",
+        "socksprotocol": "socks5",
+        "socksport": 6667,
+        "socksusername": "anonymous",
+        "sockspassword": "",
+        "bothost": "",
+        "botpath": "",
+        "localbothost": "0.0.0.0",
+        "localbotport": 8443,
+        "publicbotport": 8443,
+        "privatekey": "",
+        "certificate": "",
+        "useselfsignedcertificate": false,
+        "sslterminated": false,
+        "verboselogging": false
+    },
+    {
         "id": "5c644afc673287f2",
         "type": "mqtt in",
         "z": "72179c21269928a2",
@@ -86,12 +121,13 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 530,
-        "y": 120,
+        "x": 440,
+        "y": 160,
         "wires": [
             [
                 "7ea453f26ab62931",
-                "2488f0579b8bc164"
+                "2488f0579b8bc164",
+                "fbca7bb124a1ad35"
             ]
         ]
     },
@@ -128,7 +164,7 @@
         "authType": "",
         "senderr": false,
         "headers": [],
-        "x": 470,
+        "x": 370,
         "y": 320,
         "wires": [
             [
@@ -170,8 +206,89 @@
         "retentionPolicyV18Flux": "",
         "org": "organisation",
         "bucket": "bucket",
-        "x": 760,
-        "y": 200,
+        "x": 810,
+        "y": 160,
         "wires": []
+    },
+    {
+        "id": "fbca7bb124a1ad35",
+        "type": "function",
+        "z": "72179c21269928a2",
+        "name": "verificar_umbral",
+        "func": "const UMBRAL = 80;\nconst MI_CHAT_ID = \"8604741403\";\n\nconst porcentaje = msg.payload[0].porcentaje_llenado;\nconst contenedorId = msg.payload[1].contenedor_id;\n\nconst yaAlertado = flow.get('alertado_' + contenedorId) || false;\n\nif (porcentaje >= UMBRAL && !yaAlertado) {\n    flow.set('alertado_' + contenedorId, true);\n    msg.payload = {\n        chatId: MI_CHAT_ID,\n        type: \"message\",\n        content: `🗑️ Alerta: el contenedor ${contenedorId} está al ${porcentaje}% de su capacidad.`\n    };\n    return msg;\n} else if (porcentaje < UMBRAL && yaAlertado) {\n    flow.set('alertado_' + contenedorId, false);\n    return null;\n} else {\n    return null;\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 240,
+        "wires": [
+            [
+                "6178f62559fe52b6"
+            ]
+        ]
+    },
+    {
+        "id": "6178f62559fe52b6",
+        "type": "telegram sender",
+        "z": "72179c21269928a2",
+        "name": "AvisoContenedor",
+        "bot": "87e4aeee429d87e6",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 690,
+        "y": 360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "c4a8cc412e1b8967",
+        "type": "mqtt out",
+        "z": "1e0ab7d6c14603f8",
+        "name": "Simular sensor - lleno",
+        "topic": "facultad/contenedores/contenedor_1",
+        "qos": "2",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "8a8d42f596ef2b29",
+        "x": 480,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "c0a65e3b4a1298f9",
+        "type": "inject",
+        "z": "1e0ab7d6c14603f8",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "5",
+        "payloadType": "str",
+        "x": 190,
+        "y": 160,
+        "wires": [
+            [
+                "c4a8cc412e1b8967"
+            ]
+        ]
     }
 ]
