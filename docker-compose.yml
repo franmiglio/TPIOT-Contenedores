@@ -1,4 +1,3 @@
-version: "2"
 services:
   mqtt:
     image: eclipse-mosquitto
@@ -11,6 +10,8 @@ services:
     image: influxdb:1.8
     ports:
       - "8086:8086"
+    volumes:
+      - influxdb-data:/var/lib/influxdb
 
   nodered:
     image: nodered/node-red
@@ -23,17 +24,39 @@ services:
     links:
       - mqtt
       - influxdb
-  
-  grafana:
-    image: grafana/grafana
+      - postgres
+  postgres:
+    image: postgres:15
+    container_name: postgres
     ports:
-      - "3000:3000"
-    links:
-      - influxdb
-
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=tachos_db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data  
   telegraf:
     image: telegraf:1.16
     links:
       - influxdb
     volumes:
       - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
+  backend:
+    build: ./backend
+    container_name: backend_tachos
+    ports:
+      - "3000:3000"
+    links:
+      - postgres
+      - influxdb
+  frontend:
+    image: nginx:alpine
+    container_name: frontend_tachos
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+volumes:
+  influxdb-data:
+  postgres-data:

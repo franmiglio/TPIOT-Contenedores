@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <title>Panel de Contenedores Inteligentes</title>
+</head>
+<body>
+
+<div class="container">
+    <h2>Estado de Contenedores</h2>
+    <button class="btn" onclick="abrirModalNuevoContenedor()">+ Agregar Contenedor</button>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID Contenedor</th>
+                <th>Ubicación</th>
+                <th>Altura (cm)</th>
+                <th>Llenado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="tabla-contenedores">
+            </tbody>
+    </table>
+</div>
+
+<div id="modalContenedor" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">Registrar Nuevo Contenedor</div>
+        <form id="formNuevoContenedor" onsubmit="guardarContenedor(event)">
+            <div class="form-group">
+                <label>ID del Contenedor (Mismo que el topic MQTT)</label>
+                <input type="text" id="contenedorId" placeholder="Ej: contenedor_plantabaja_1" required>
+            </div>
+            <div class="form-group">
+                <label>Nombre / Ubicación</label>
+                <input type="text" id="contenedorNombre" placeholder="Ej: Plaza Central - Norte" required>
+            </div>
+            <div class="form-group">
+                <label>Altura Manual en cm (Dejar vacío para auto-calibrar)</label>
+                <input type="number" step="0.1" id="contenedorAltura" placeholder="Ej: 80">
+            </div>
+            <div class="form-group">
+                <label>Latitud (Opcional para el mapa)</label>
+                <input type="number" step="any" id="contenedorLat">
+            </div>
+            <div class="form-group">
+                <label>Longitud (Opcional para el mapa)</label>
+                <input type="number" step="any" id="contenedorLng">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="cerrarModal()">Cancelar</button>
+                <button type="submit" class="btn">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
