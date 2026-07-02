@@ -3,3 +3,7 @@ postgres-data/
 influxdb-storage/
 mosquitto/data/
 mosquitto/log/
+.config.nodes.json
+.config.nodes.json.backup
+.config.runtime.json
+node_modules/
