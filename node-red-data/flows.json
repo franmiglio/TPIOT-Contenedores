@@ -215,7 +215,7 @@
         "type": "function",
         "z": "72179c21269928a2",
         "name": "verificar_umbral",
-        "func": "const UMBRAL = 80;\nconst MI_CHAT_ID = \"8604741403\";\n\nconst porcentaje = msg.payload[0].porcentaje_llenado;\nconst contenedorId = msg.payload[1].contenedor_id;\n\nconst yaAlertado = flow.get('alertado_' + contenedorId) || false;\n\nif (porcentaje >= UMBRAL && !yaAlertado) {\n    flow.set('alertado_' + contenedorId, true);\n    msg.payload = {\n        chatId: MI_CHAT_ID,\n        type: \"message\",\n        content: `🗑️ Alerta: el contenedor ${contenedorId} está al ${porcentaje}% de su capacidad.`\n    };\n    return msg;\n} else if (porcentaje < UMBRAL && yaAlertado) {\n    flow.set('alertado_' + contenedorId, false);\n    return null;\n} else {\n    return null;\n}",
+        "func": "const UMBRAL = 80;\nconst MI_CHAT_ID = \"-5508180811\";\n\nconst porcentaje = msg.payload[0].porcentaje_llenado;\nconst contenedorId = msg.payload[1].contenedor_id;\n\nconst yaAlertado = flow.get('alertado_' + contenedorId) || false;\n\nif (porcentaje >= UMBRAL && !yaAlertado) {\n    flow.set('alertado_' + contenedorId, true);\n    msg.payload = {\n        chatId: MI_CHAT_ID,\n        type: \"message\",\n        content: `🗑️ Alerta: el contenedor ${contenedorId} está al ${porcentaje}% de su capacidad.`\n    };\n    return msg;\n} else if (porcentaje < UMBRAL && yaAlertado) {\n    flow.set('alertado_' + contenedorId, false);\n    return null;\n} else {\n    return null;\n}",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -290,5 +290,42 @@
                 "c4a8cc412e1b8967"
             ]
         ]
+    },
+    {
+        "id": "9010c47f890c4c3f",
+        "type": "telegram receiver",
+        "z": "1e0ab7d6c14603f8",
+        "name": "",
+        "bot": "87e4aeee429d87e6",
+        "saveDataDir": "",
+        "filterCommands": false,
+        "hasinput": false,
+        "inputs": 0,
+        "handleallupdates": false,
+        "handleprocessupdates": false,
+        "x": 250,
+        "y": 240,
+        "wires": [
+            [
+                "b28fa6f99366f02f"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "b28fa6f99366f02f",
+        "type": "debug",
+        "z": "1e0ab7d6c14603f8",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 480,
+        "y": 240,
+        "wires": []
     }
 ]
