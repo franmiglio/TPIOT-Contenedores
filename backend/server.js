@@ -26,7 +26,7 @@ const influx = new Influx.InfluxDB({
 
 app.get('/api/contenedores/estado', async (req, res) => {
     try {
-        const pgResult = await pgPool.query('SELECT id, nombre, altura_cm FROM contenedores');
+        const pgResult = await pgPool.query('SELECT id, nombre, altura_cm, longitud, latitud, piso FROM contenedores');
         const contenedores = pgResult.rows;
 
         const influxQuery = `SELECT LAST("porcentaje_llenado") AS porcentaje FROM "estado_contenedores" GROUP BY "contenedor_id"`;
@@ -69,16 +69,16 @@ app.get('/api/contenedores/:id/altura', async (req, res) => {
 });
 
 app.post('/api/contenedores', async (req, res) => {
-    const { id, nombre, altura_cm, latitud, longitud } = req.body;
+    const { id, nombre, altura_cm, latitud, longitud, piso } = req.body;
     
     try {
         const query = `
-            INSERT INTO contenedores (id, nombre, altura_cm, latitud, longitud) 
-            VALUES ($1, $2, $3, $4, $5)
+            INSERT INTO contenedores (id, nombre, altura_cm, latitud, longitud, piso) 
+            VALUES ($1, $2, $3, $4, $5, $6)
         `;
         const alturaDb = altura_cm === "" ? null : altura_cm;
         
-        const valores = [id, nombre, alturaDb, latitud || null, longitud || null];
+        const valores = [id, nombre, alturaDb, latitud || null, longitud || null, piso];
         
         await pgPool.query(query, valores);
         res.status(201).json({ mensaje: "Contenedor registrado correctamente" });
