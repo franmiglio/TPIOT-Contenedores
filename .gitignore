@@ -1,4 +1,5 @@
 .env
+node_modules/
 postgres-data/
 influxdb-storage/
 mosquitto/data/

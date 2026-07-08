@@ -11,7 +11,13 @@
 
 <div class="container">
     <h2>Estado de Contenedores</h2>
-    <button class="btn" onclick="abrirModalNuevoContenedor()">+ Agregar Contenedor</button>
+    <div id="bloqueAgregarContenedor">
+        <button class="btn" id="btnActivarMapa" onclick="activarModoInsercion()">+ Agregar Contenedor</button>
+        <span id="textoInstruccion">
+            📍 Hacé clic en el mapa para ubicar el contenedor... 
+            <a id="cancelarAgregar" href="#" onclick="cancelarModoInsercion()">(Cancelar)</a>
+        </span>
+    </div>
 
     <div id="selector">
         <label id="label-piso">Viendo piso:</label>
@@ -68,12 +74,12 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Latitud</label>
-                <input type="number" step="any" id="contenedorLat">
+                <label>Latitud (Autocompletado)</label>
+                <input type="number" step="any" id="contenedorLat" readonly>
             </div>
             <div class="form-group">
-                <label>Longitud</label>
-                <input type="number" step="any" id="contenedorLng">
+                <label>Longitud (Autocompletado)</label>
+                <input type="number" step="any" id="contenedorLng" readonly>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-cancel" onclick="cerrarModal()">Cancelar</button>

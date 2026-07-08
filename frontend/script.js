@@ -19,16 +19,39 @@ map.fitBounds(limites);
 
 map.setMaxBounds([[-200, -200], [altoImagen + 200, anchoImagen + 200]]);
 
+let modoInsercionActivo = false;
 
+function activarModoInsercion() {
+    modoInsercionActivo = true;
+    
+    document.getElementById('btnActivarMapa').style.display = 'none';
+    document.getElementById('textoInstruccion').style.display = 'inline-block';
+    document.getElementById('mapa').style.cursor = 'crosshair';
+}
+
+function cancelarModoInsercion() {
+    modoInsercionActivo = false;
+    
+    document.getElementById('btnActivarMapa').style.display = 'inline-block';
+    document.getElementById('textoInstruccion').style.display = 'none';
+    document.getElementById('mapa').style.cursor = '';
+}
 
 map.on('click', function(e) {
+if (!modoInsercionActivo) return; 
+
     const lat = Math.round(e.latlng.lat);
     const lng = Math.round(e.latlng.lng); 
     
     if(lat >= 0 && lat <= altoImagen && lng >= 0 && lng <= anchoImagen) {
-        alert(`COORDENADAS:\nLatitud: ${lat}\nLongitud: ${lng}`);
-    } else {
-        console.log("Clic fuera del plano");
+        
+        document.getElementById('contenedorLat').value = lat;
+        document.getElementById('contenedorLng').value = lng;
+        
+        abrirModalNuevoContenedor();
+        
+        cancelarModoInsercion();
+        
     }
 });
 
@@ -116,7 +139,7 @@ async function cargarContenedores() {
                     <td>${contenedor.altura_cm ? contenedor.altura_cm : 'Sin calibrar'}</td>
                     <td><span class="status-badge ${colorClass}">${llenadoTexto}</span></td>
                     <td>${contenedor.piso || '-'}</td>
-                    <td><button class="btn" style="background:#17a2b8;">Calibrar</button></td>
+                    <td><button class="btn" style="background:#17a2b8;" onclick="calibrarContenedor('${contenedor.id}')">Calibrar</button></td>
                 </tr>
             `;
             tbody.innerHTML += fila;
@@ -140,8 +163,11 @@ async function cargarContenedores() {
                 const marcador = L.marker([lat, lng], { icon: iconoTacho }).addTo(map);
 
                 marcador.bindPopup(`
-                    <b>${contenedor.nombre}</b><br>
-                    Nivel actual: <span class="status-badge ${colorClass}">${llenadoTexto}</span>
+                    <div style="text-align: center;">
+                        <b style="font-size: 14px;">${contenedor.nombre}</b><br><br>
+                        Nivel actual: <span class="status-badge ${colorClass}">${llenadoTexto}</span><br><br>
+                        <a href="contenedor.html?id=${contenedor.id}" class="btn" style="background-color: #007bff; text-decoration: none; display: block; color: white;">Ver Detalles</a>
+                    </div>
                 `);
 
                 marcadores.push(marcador);
@@ -151,6 +177,18 @@ async function cargarContenedores() {
         console.error("Error al cargar los datos:", error);
     }
 }
+async function calibrarContenedor(id) {
+    if(!confirm(`Asegurate de que el contenedor ${id} esté VACÍO. ¿Comenzar calibración?`)) return;
 
+    try {
+        const respuesta = await fetch(`${API_URL}/${id}/calibrar`, { method: 'PUT' });
+        if (respuesta.ok) {
+            mostrarMensaje(`Calibrando ${id}... El próximo dato del sensor definirá la altura.`);
+            cargarContenedores();
+        }
+    } catch (error) {
+        console.error("Error al calibrar:", error);
+    }
+}
 cargarContenedores();
-setInterval(cargarContenedores, 5000);
+setInterval(cargarContenedores, 2500);

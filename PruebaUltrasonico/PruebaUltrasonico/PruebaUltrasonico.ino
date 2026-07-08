@@ -3,7 +3,7 @@
 #include <WiFiManager.h>
 
 // Configuración de MQTT
-const char* mqtt_server = "192.168.1.48"; 
+const char* mqtt_server = "192.168.1.33"; 
 const int mqtt_port = 1883;
 const char* mqtt_topic = "facultad/contenedores/contenedor_1";
 
@@ -72,5 +72,5 @@ void loop() {
   Serial.print(distancia_cm);
   Serial.println(" cm");
 
-  delay(5000);
+  delay(2500);
 }
