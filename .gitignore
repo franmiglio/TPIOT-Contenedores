@@ -7,7 +7,6 @@ mosquitto/log/
 .config.nodes.json
 .config.nodes.json.backup
 .config.runtime.json
-node_modules/
 node-red-data/flows_cred.json
 node-red-data/.config.users.json
 node-red-data/.config.users.json.backup
