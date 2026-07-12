@@ -21,6 +21,8 @@ services:
     volumes:
       - ./node-red-data:/data
       - /dev/snd:/dev/snd
+    environment:
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
     links:
       - mqtt
       - influxdb

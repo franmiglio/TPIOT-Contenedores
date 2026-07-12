@@ -1,13 +1,5 @@
 [
     {
-        "id": "72179c21269928a2",
-        "type": "tab",
-        "label": "Flow 1",
-        "disabled": false,
-        "info": "",
-        "env": []
-    },
-    {
         "id": "d547f7af47639184",
         "type": "tab",
         "label": "Flow 2",
@@ -89,246 +81,6 @@
         "verboselogging": false
     },
     {
-        "id": "5c644afc673287f2",
-        "type": "mqtt in",
-        "z": "72179c21269928a2",
-        "name": "",
-        "topic": "facultad/contenedores/#",
-        "qos": "2",
-        "datatype": "utf8",
-        "broker": "8a8d42f596ef2b29",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "inputs": 0,
-        "x": 100,
-        "y": 160,
-        "wires": [
-            [
-                "e1d47ba962575527"
-            ]
-        ]
-    },
-    {
-        "id": "f9960e8ba418c234",
-        "type": "function",
-        "z": "72179c21269928a2",
-        "name": "function 1",
-        "func": "// Verificamos si el backend nos devolvió la altura (si el contenedor existe)\nif (msg.payload && msg.payload.altura_cm) {\n    let altura_real = msg.payload.altura_cm;\n    let distancia = msg.distancia_cruda;\n    \n    // Cálculo del porcentaje\n    let porcentaje = 100.0 - ((distancia / altura_real) * 100.0);\n    \n    // Filtros por si el sensor lee mal\n    if (porcentaje < 0) porcentaje = 0;\n    if (porcentaje > 100) porcentaje = 100;\n\n    // Formateamos para InfluxDB: Array con [ {Fields}, {Tags} ]\n    msg.payload = [\n        {\n            distancia_cm: distancia,\n            porcentaje_llenado: Math.round(porcentaje)\n        },\n        {\n            contenedor_id: msg.contenedor_id\n        }\n    ];\n    \n    return msg;\n} else {\n    // Si el contenedor no está en la base de datos (Postgres), abortamos\n    node.warn(\"El contenedor \" + msg.contenedor_id + \" no está registrado en el sistema.\");\n    return null; \n}",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 440,
-        "y": 160,
-        "wires": [
-            [
-                "7ea453f26ab62931",
-                "2488f0579b8bc164",
-                "fbca7bb124a1ad35"
-            ]
-        ]
-    },
-    {
-        "id": "7ea453f26ab62931",
-        "type": "debug",
-        "z": "72179c21269928a2",
-        "name": "debug 1",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 720,
-        "y": 60,
-        "wires": []
-    },
-    {
-        "id": "05fa20efe01a7569",
-        "type": "http request",
-        "z": "72179c21269928a2",
-        "name": "",
-        "method": "GET",
-        "ret": "obj",
-        "paytoqs": "ignore",
-        "url": "",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "insecureHTTPParser": false,
-        "authType": "",
-        "senderr": false,
-        "headers": [],
-        "x": 370,
-        "y": 320,
-        "wires": [
-            [
-                "f9960e8ba418c234"
-            ]
-        ]
-    },
-    {
-        "id": "e1d47ba962575527",
-        "type": "function",
-        "z": "72179c21269928a2",
-        "name": "function 2",
-        "func": "let partesTopic = msg.topic.split(\"/\");\nlet id_contenedor = partesTopic[partesTopic.length - 1]; \n\n\nmsg.contenedor_id = id_contenedor;\nmsg.distancia_cruda = parseFloat(msg.payload);\n\nmsg.url = \"http://backend:3000/api/contenedores/\" + id_contenedor + \"/altura\";\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 210,
-        "y": 320,
-        "wires": [
-            [
-                "05fa20efe01a7569"
-            ]
-        ]
-    },
-    {
-        "id": "2488f0579b8bc164",
-        "type": "influxdb out",
-        "z": "72179c21269928a2",
-        "influxdb": "f8df3e6b31e8564a",
-        "name": "",
-        "measurement": "estado_contenedores",
-        "precision": "",
-        "retentionPolicy": "",
-        "database": "database",
-        "precisionV18FluxV20": "ms",
-        "retentionPolicyV18Flux": "",
-        "org": "organisation",
-        "bucket": "bucket",
-        "x": 810,
-        "y": 160,
-        "wires": []
-    },
-    {
-        "id": "fbca7bb124a1ad35",
-        "type": "function",
-        "z": "72179c21269928a2",
-        "name": "verificar_umbral",
-        "func": "const UMBRAL = 80;\nconst MI_CHAT_ID = \"-5508180811\";\n\nconst porcentaje = msg.payload[0].porcentaje_llenado;\nconst contenedorId = msg.payload[1].contenedor_id;\n\nconst yaAlertado = flow.get('alertado_' + contenedorId) || false;\n\nif (porcentaje >= UMBRAL && !yaAlertado) {\n    flow.set('alertado_' + contenedorId, true);\n    msg.payload = {\n        chatId: MI_CHAT_ID,\n        type: \"message\",\n        content: `🗑️ Alerta: el contenedor ${contenedorId} está al ${porcentaje}% de su capacidad.`\n    };\n    return msg;\n} else if (porcentaje < UMBRAL && yaAlertado) {\n    flow.set('alertado_' + contenedorId, false);\n    return null;\n} else {\n    return null;\n}",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 560,
-        "y": 240,
-        "wires": [
-            [
-                "6178f62559fe52b6"
-            ]
-        ]
-    },
-    {
-        "id": "6178f62559fe52b6",
-        "type": "telegram sender",
-        "z": "72179c21269928a2",
-        "name": "AvisoContenedor",
-        "bot": "87e4aeee429d87e6",
-        "haserroroutput": false,
-        "outputs": 1,
-        "x": 690,
-        "y": 360,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "c4a8cc412e1b8967",
-        "type": "mqtt out",
-        "z": "1e0ab7d6c14603f8",
-        "name": "Simular sensor - lleno",
-        "topic": "facultad/contenedores/contenedor_1",
-        "qos": "2",
-        "retain": "",
-        "respTopic": "",
-        "contentType": "",
-        "userProps": "",
-        "correl": "",
-        "expiry": "",
-        "broker": "8a8d42f596ef2b29",
-        "x": 480,
-        "y": 160,
-        "wires": []
-    },
-    {
-        "id": "c0a65e3b4a1298f9",
-        "type": "inject",
-        "z": "1e0ab7d6c14603f8",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "5",
-        "payloadType": "str",
-        "x": 190,
-        "y": 160,
-        "wires": [
-            [
-                "c4a8cc412e1b8967"
-            ]
-        ]
-    },
-    {
-        "id": "9010c47f890c4c3f",
-        "type": "telegram receiver",
-        "z": "1e0ab7d6c14603f8",
-        "name": "",
-        "bot": "87e4aeee429d87e6",
-        "saveDataDir": "",
-        "filterCommands": false,
-        "hasinput": false,
-        "inputs": 0,
-        "handleallupdates": false,
-        "handleprocessupdates": false,
-        "x": 250,
-        "y": 240,
-        "wires": [
-            [
-                "b28fa6f99366f02f"
-            ],
-            []
-        ]
-    },
-    {
-        "id": "b28fa6f99366f02f",
-        "type": "debug",
-        "z": "1e0ab7d6c14603f8",
-        "name": "debug 2",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 480,
-        "y": 240,
-        "wires": []
-    },
-    {
         "id": "c4d4ec14010cfa86",
         "type": "mqtt in",
         "z": "d547f7af47639184",
@@ -345,7 +97,8 @@
         "y": 120,
         "wires": [
             [
-                "da860d7f849026f5"
+                "da860d7f849026f5",
+                "fbe3236266b275ba"
             ]
         ]
     },
@@ -448,19 +201,20 @@
         "type": "function",
         "z": "d547f7af47639184",
         "name": "function 4",
-        "func": "if (msg.payload && msg.payload.altura_cm) {\n    let altura_real = msg.payload.altura_cm;\n    let distancia = msg.distancia_cruda;\n    \n\n    let porcentaje = 100.0 - ((distancia / altura_real) * 100.0);\n    \n\n    if (porcentaje < 0) porcentaje = 0;\n    if (porcentaje > 100) porcentaje = 100;\n\n\n    msg.payload = [\n        {\n            distancia_cm: distancia,\n            porcentaje_llenado: Math.round(porcentaje)\n        },\n        {\n            contenedor_id: msg.contenedor_id\n        }\n    ];\n    \n    return msg;\n} else {\n    // Si el contenedor no está en la base de datos (Postgres), abortamos\n    node.warn(\"El contenedor \" + msg.contenedor_id + \" no está registrado en el sistema.\");\n    return null; \n}",
+        "func": "if (msg.payload && msg.payload.altura_cm) {\n    let altura_real = msg.payload.altura_cm;\n    let distancia = msg.distancia_cruda;\n    \n\n    let porcentaje = 100.0 - ((distancia / altura_real) * 100.0);\n    \n\n    if (porcentaje < 0) porcentaje = 0;\n    if (porcentaje > 100) porcentaje = 100;\n\n\n    msg.payload = [\n        {\n            distancia_cm: distancia,\n            porcentaje_llenado: Math.round(porcentaje)\n        },\n        {\n            contenedor_id: msg.id_contenedor\n        }\n    ];\n    \n    return msg;\n} else {\n    // Si el contenedor no está en la base de datos (Postgres), abortamos\n    node.warn(\"El contenedor \" + msg.contenedor_id + \" no está registrado en el sistema.\");\n    return null; \n}",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 690,
-        "y": 260,
+        "x": 720,
+        "y": 300,
         "wires": [
             [
                 "27c5fd0ba4c96655",
-                "e44cd542b08899b2"
+                "e44cd542b08899b2",
+                "568a71ee4de48001"
             ]
         ]
     },
@@ -478,8 +232,8 @@
         "retentionPolicyV18Flux": "",
         "org": "organisation",
         "bucket": "bucket",
-        "x": 930,
-        "y": 300,
+        "x": 1010,
+        "y": 280,
         "wires": []
     },
     {
@@ -509,7 +263,7 @@
         "type": "debug",
         "z": "d547f7af47639184",
         "name": "debug 3",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -517,8 +271,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 790,
-        "y": 220,
+        "x": 940,
+        "y": 200,
         "wires": []
     },
     {
@@ -526,7 +280,7 @@
         "type": "debug",
         "z": "d547f7af47639184",
         "name": "debug 2",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -536,6 +290,56 @@
         "statusType": "auto",
         "x": 610,
         "y": 400,
+        "wires": []
+    },
+    {
+        "id": "568a71ee4de48001",
+        "type": "function",
+        "z": "d547f7af47639184",
+        "name": "verificar_umbral",
+        "func": "const UMBRAL = 80;\nconst MI_CHAT_ID = env.get(\"TELEGRAM_CHAT_ID\");\n\nconst porcentaje = msg.payload[0].porcentaje_llenado;\nconst contenedorId = msg.payload[1].contenedor_id;\n\nconst yaAlertado = flow.get('alertado_' + contenedorId) || false;\n\nif (porcentaje >= UMBRAL && !yaAlertado) {\n    flow.set('alertado_' + contenedorId, true);\n    msg.payload = {\n        chatId: MI_CHAT_ID,\n        type: \"message\",\n        content: `Alerta: el contenedor ${contenedorId} está al ${porcentaje}% de su capacidad.`\n    };\n    return msg;\n} else if (porcentaje < UMBRAL && yaAlertado) {\n    flow.set('alertado_' + contenedorId, false);\n    return null;\n} else {\n    return null;\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 940,
+        "y": 360,
+        "wires": [
+            [
+                "45d73486f8a3446d"
+            ]
+        ]
+    },
+    {
+        "id": "45d73486f8a3446d",
+        "type": "telegram sender",
+        "z": "d547f7af47639184",
+        "name": "AvisoContenedor",
+        "bot": "87e4aeee429d87e6",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 990,
+        "y": 440,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fbe3236266b275ba",
+        "type": "debug",
+        "z": "d547f7af47639184",
+        "name": "debug 1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 340,
+        "y": 60,
         "wires": []
     }
 ]
