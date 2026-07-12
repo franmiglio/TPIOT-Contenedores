@@ -26,7 +26,7 @@ const influx = new Influx.InfluxDB({
 
 app.get('/api/contenedores/estado', async (req, res) => {
     try {
-        const pgResult = await pgPool.query('SELECT id, nombre, altura_cm FROM contenedores');
+        const pgResult = await pgPool.query('SELECT id, nombre, altura_cm, longitud, latitud, piso FROM contenedores');
         const contenedores = pgResult.rows;
 
         const influxQuery = `SELECT LAST("porcentaje_llenado") AS porcentaje FROM "estado_contenedores" GROUP BY "contenedor_id"`;
@@ -56,9 +56,12 @@ app.get('/api/contenedores/estado', async (req, res) => {
 app.get('/api/contenedores/:id/altura', async (req, res) => {
     const { id } = req.params;
     try {
-        const result = await pgPool.query('SELECT altura_cm FROM contenedores WHERE id = $1', [id]);
+        const result = await pgPool.query('SELECT altura_cm, en_calibracion FROM contenedores WHERE id = $1', [id]);
         if (result.rows.length > 0) {
-            res.json({ altura_cm: result.rows[0].altura_cm });
+            res.json({ 
+                altura_cm: result.rows[0].altura_cm,
+                en_calibracion: result.rows[0].en_calibracion
+            });
         } else {
             res.status(404).json({ error: "Contenedor no encontrado en el inventario" });
         }
@@ -69,16 +72,16 @@ app.get('/api/contenedores/:id/altura', async (req, res) => {
 });
 
 app.post('/api/contenedores', async (req, res) => {
-    const { id, nombre, altura_cm, latitud, longitud } = req.body;
+    const { id, nombre, altura_cm, latitud, longitud, piso } = req.body;
     
     try {
         const query = `
-            INSERT INTO contenedores (id, nombre, altura_cm, latitud, longitud) 
-            VALUES ($1, $2, $3, $4, $5)
+            INSERT INTO contenedores (id, nombre, altura_cm, latitud, longitud, piso) 
+            VALUES ($1, $2, $3, $4, $5, $6)
         `;
         const alturaDb = altura_cm === "" ? null : altura_cm;
         
-        const valores = [id, nombre, alturaDb, latitud || null, longitud || null];
+        const valores = [id, nombre, alturaDb, latitud || null, longitud || null, piso];
         
         await pgPool.query(query, valores);
         res.status(201).json({ mensaje: "Contenedor registrado correctamente" });
@@ -93,6 +96,79 @@ app.post('/api/contenedores', async (req, res) => {
     }
 });
 
+app.put('/api/contenedores/:id/calibrar', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pgPool.query('UPDATE contenedores SET en_calibracion = TRUE WHERE id = $1', [id]);
+        res.json({ mensaje: "Modo calibración activado. Esperando lectura del sensor..." });
+    } catch (error) {
+        console.error("Error al activar calibración:", error);
+        res.status(500).json({ error: "Error interno" });
+    }
+});
+app.put('/api/contenedores/:id/altura', async (req, res) => {
+    const { id } = req.params;
+    const { altura_cm } = req.body;
+
+    try {
+        await pgPool.query(
+            'UPDATE contenedores SET altura_cm = $1, en_calibracion = FALSE WHERE id = $2', 
+            [altura_cm, id]
+        );
+        res.json({ mensaje: "Contenedor calibrado exitosamente" });
+    } catch (error) {
+        console.error("Error al guardar la calibración:", error);
+        res.status(500).json({ error: "Error interno" });
+    }
+});
+app.get('/api/contenedores/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pgPool.query('SELECT nombre, piso, altura_cm FROM contenedores WHERE id = $1', [id]);
+        if (result.rows.length > 0) {
+            res.json(result.rows[0]);
+        } else {
+            res.status(404).json({ error: "Contenedor no encontrado" });
+        }
+    } catch (error) {
+        res.status(500).json({ error: "Error interno" });
+    }
+});
+
+app.put('/api/contenedores/:id', async (req, res) => {
+    const { id } = req.params;
+    const { nombre, piso, altura_cm } = req.body;
+    try {
+        await pgPool.query('UPDATE contenedores SET nombre = $1, piso = $2, altura_cm = $3 WHERE id = $4', [nombre, piso, altura_cm, id]);
+        res.json({ mensaje: "Datos actualizados correctamente" });
+    } catch (error) {
+        res.status(500).json({ error: "Error al actualizar" });
+    }
+});
+app.get('/api/contenedores/:id/estadisticas', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const query = `SELECT "porcentaje_llenado" FROM "estado_contenedores" WHERE "contenedor_id" = '${id}' AND time > now() - 7d`;
+        const datos = await influx.query(query);
+
+        if (datos.length === 0) {
+            return res.json({ vaciados: 0, promedio_horas: "Sin datos suficientes" });
+        }
+
+        let vaciados = 0;
+        for (let i = 1; i < datos.length; i++) {
+            if (datos[i-1].porcentaje_llenado > 50 && datos[i].porcentaje_llenado < 20) {
+                vaciados++;
+            }
+        }
+        let promedio = vaciados > 0 ? Math.round((7 * 24) / vaciados) : "Más de 7 días";
+
+        res.json({ vaciados: vaciados, promedio_horas: promedio });
+    } catch (error) {
+        console.error("Error en InfluxDB:", error);
+        res.status(500).json({ error: "Error al calcular estadísticas" });
+    }
+});
 app.listen(3000, () => {
     console.log('API de Contenedores iniciada en puerto 3000');
 });
