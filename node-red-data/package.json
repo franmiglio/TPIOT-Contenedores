@@ -5,6 +5,6 @@
     "private": true,
     "dependencies": {
         "node-red-contrib-influxdb": "~0.7.0",
-        "node-red-contrib-telegrambot": "~17.4.17"
+        "node-red-contrib-telegrambot": "~18.0.0"
     }
 }
