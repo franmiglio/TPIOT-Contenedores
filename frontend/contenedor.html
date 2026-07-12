@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <title>Detalles del Contenedor</title>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" style="text-decoration: none; color: #007bff;">⬅ Volver al Mapa</a>
+        
+        <h2 id="tituloContenedor">Cargando datos...</h2>
+        
+        <div id="bloqueContenedor">
+            <div id="subBloqueContenedor">
+                <h3>Estadísticas</h3>
+                <p>Calculando promedios...</p>
+                <div id="tarjetaEstadisticas">
+                    <h4>Vaciados totales:</h4>
+                    <p id="statVaciados">Calculando...</p>
+                </div>
+
+                <div id="tarjetaEstadisticas">
+                    <h4 style="margin: 0 0 5px 0; color: #6c757d;">Tiempo promedio de llenado:</h4>
+                    <p id="statPromedio">Calculando...</p>
+                </div>
+            </div>
+
+            <div id="subBloqueContenedor">
+                <h3>Editar Datos</h3>
+                <form id="formEditarContenedor">
+                    <div class="form-group">
+                        <label>Nombre / Ubicación</label>
+                        <input type="text" id="editNombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Altura</label>
+                        <input type="number" step="0.1" id="editAltura">
+                    </div>
+                    <div class="form-group">
+                        <label>Piso</label>
+                        <select id="editPiso" required>
+                            <option value="Planta Baja">Planta Baja</option>
+                            <option value="Primer Piso">Primer Piso</option>
+                            <option value="Segundo Piso">Segundo Piso</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">Guardar Cambios</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="contenedor.js"></script>
+</body>
+</html>
