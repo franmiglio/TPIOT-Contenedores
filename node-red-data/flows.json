@@ -305,7 +305,7 @@
         "type": "function",
         "z": "d547f7af47639184",
         "name": "verificar_umbral",
-        "func": "const UMBRAL = 80;\nconst MI_CHAT_ID = env.get(\"TELEGRAM_CHAT_ID\");\n\nconst porcentaje = msg.payload[0].porcentaje_llenado;\nconst contenedorId = msg.payload[1].contenedor_id;\n\nconst yaAlertado = flow.get('alertado_' + contenedorId) || false;\n\nif (porcentaje >= UMBRAL && !yaAlertado) {\n    flow.set('alertado_' + contenedorId, true);\n    msg.payload = {\n        chatId: MI_CHAT_ID,\n        type: \"message\",\n        content: `Alerta: el contenedor ${contenedorId} está al ${porcentaje}% de su capacidad.`\n    };\n    return msg;\n} else if (porcentaje < UMBRAL && yaAlertado) {\n    flow.set('alertado_' + contenedorId, false);\n    return null;\n} else {\n    return null;\n}",
+        "func": "const UMBRAL = 80;\nconst MI_CHAT_ID = env.get(\"TELEGRAM_CHAT_ID\");\n\nconst porcentaje = msg.payload[0].porcentaje_llenado;\nconst contenedorId = msg.payload[1].contenedor_id;\n\nconst yaAlertado = flow.get('alertado_' + contenedorId) || false;\n\nif (porcentaje >= UMBRAL && !yaAlertado) {\n    flow.set('alertado_' + contenedorId, true);\n    msg.payload = {\n        chatId: MI_CHAT_ID,\n        type: \"message\",\n        content: `ALERTA: el contenedor ${contenedorId} está al ${porcentaje}% de su capacidad.`\n    };\n    return msg;\n} else if (porcentaje < 20 && yaAlertado) {\n    flow.set('alertado_' + contenedorId, false);\n    msg.payload = {\n        chatId: MI_CHAT_ID,\n        type: \"message\",\n        content: `El contenedor ${contenedorId} fue VACIADO.`\n    };\n    return msg;\n} else {\n    return null;\n}",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
