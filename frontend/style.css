@@ -39,7 +39,19 @@ b{font-size: 14px;}
 .modal-footer { text-align: right; margin-top: 20px; }
 #contenedorLat {background-color: #e9ecef; cursor: not-allowed;}
 #contenedorLng {background-color: #e9ecef; cursor: not-allowed;}  
-#mensaje-flotante { display: none; margin-top: 15px; padding: 10px; border-radius: 4px; background: #d4edda; color: #155724; text-align: center;}
+#mensaje-flotante {display: none; 
+    position: fixed;
+    top: 20px;       
+    left: 50%;    
+    transform: translateX(-50%); 
+    z-index: 9999;
+    padding: 15px 25px; 
+    border-radius: 6px; 
+    background: #d4edda; 
+    color: #155724; 
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    font-weight: bold;}
 .marcador-tacho {
     border: 3px solid #333; 
     border-radius: 2px 2px 6px 6px;

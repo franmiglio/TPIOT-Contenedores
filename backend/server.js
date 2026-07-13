@@ -89,7 +89,7 @@ app.post('/api/contenedores', async (req, res) => {
     } catch (error) {
         console.error("Error al guardar el contenedor:", error);
         if (error.code === '23505') { 
-            res.status(400).json({ error: "Ya existe un contenedor con ese ID" });
+            res.status(400).json({ error: "Ya existe un contenedor con ese topic MQTT" });
         } else {
             res.status(500).json({ error: "Error interno del servidor" });
         }

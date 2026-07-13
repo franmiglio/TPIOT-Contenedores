@@ -84,8 +84,12 @@ map.on('click', async function(e) {
                     mostrarMensaje('¡Ubicación actualizada exitosamente!');
                     cargarContenedores();
                 }
+                else{
+                    mostrarMensaje(data.error || 'Error al reubicar el contenedor', true);
+                }
             } catch (error) { 
                 console.error("Error al reubicar:", error); 
+                mostrarMensaje('Error de conexión con el servidor', true);
             }
             cancelarModoReubicacion();
         }
@@ -98,9 +102,21 @@ function cerrarModal() {
     document.getElementById('modalContenedor').style.display = 'none'; 
     document.getElementById('formNuevoContenedor').reset(); 
 }
-function mostrarMensaje(texto) {
+function mostrarMensaje(texto, esError = false) {
     const msg = document.getElementById('mensaje-flotante');
-    msg.innerText = texto; msg.style.display = 'block';
+    msg.innerText = texto; 
+    
+    if (esError) {
+        msg.style.background = '#f8d7da';
+        msg.style.color = '#721c24';
+        msg.style.border = '1px solid #f5c6cb';
+    } else {
+        msg.style.background = '#d4edda';
+        msg.style.color = '#155724';
+        msg.style.border = 'none';
+    }
+    
+    msg.style.display = 'block';
     setTimeout(() => msg.style.display = 'none', 3000);
 }
 
@@ -121,12 +137,20 @@ async function guardarContenedor(event) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(nuevoContenedor)
         });
+        
+        const data = await respuesta.json();
+
         if (respuesta.ok) {
             cerrarModal();
             mostrarMensaje('¡Contenedor agregado exitosamente!');
             cargarContenedores(); 
+        } else {
+            mostrarMensaje(data.error || 'Error al guardar el contenedor', true);
         }
-    } catch (error) { console.error("Error:", error); }
+    } catch (error) { 
+        console.error("Error:", error); 
+        mostrarMensaje('Error de red: No se pudo conectar con el servidor', true);
+    }
 }
 
 
@@ -237,12 +261,17 @@ async function ejecutarCalibracion(id, nombre) {
     
     try {
         const respuesta = await fetch(`${API_URL}/${id}/calibrar`, { method: 'PUT' });
+        const data = await respuesta.json();
+
         if (respuesta.ok) {
             mostrarMensaje(`Calibrando "${nombre}"... El próximo dato del sensor definirá la altura.`);
             cargarContenedores();
+        } else {
+            mostrarMensaje(data.error || 'Error al intentar calibrar', true);
         }
     } catch (error) {
         console.error("Error al calibrar:", error);
+        mostrarMensaje('Error de conexión con el servidor', true);
     }
 }
 cargarContenedores();

@@ -33,7 +33,12 @@ async function cargarDatosPagina() {
             const stats = await resStats.json();
     
             if (statPromedio && statVaciados) {
+                if (stats.vaciados == 1){
+                    statVaciados.innerText = `${stats.vaciados} vez en los últimos 7 días`;
+                }
+                else{
                 statVaciados.innerText = `${stats.vaciados} veces en los últimos 7 días`;
+                }
                 statPromedio.innerText = typeof stats.promedio_horas === 'number' 
                     ? `Aprox. ${stats.promedio_horas} horas` 
                     : stats.promedio_horas;
