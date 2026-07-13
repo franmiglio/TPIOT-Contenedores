@@ -22,7 +22,6 @@ cliente.on('connect', () => {
                 console.log(`El contenedor ${tacho.id} fue vaciado.`);
             }
 
-            // Armamos el topic y enviamos el dato crudo (como hace el ESP32)
             const topic = `facultad/contenedores/${tacho.id}`;
             cliente.publish(topic, tacho.distanciaActual.toString());
             
