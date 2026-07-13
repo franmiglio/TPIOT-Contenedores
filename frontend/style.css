@@ -67,3 +67,4 @@ b{font-size: 14px;}
 #title-modal-delete{margin-top: 0; color: #dc3545;}
 #text-modal-delete{font-size: 16px; margin-bottom: 25px;}
 #botones-delete{display: flex; justify-content: center; gap: 15px;}
+#editTopic{background-color: #e9ecef; color: #6c757d;}

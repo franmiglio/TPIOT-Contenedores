@@ -22,6 +22,7 @@ async function cargarDatosPagina() {
         const resDatos = await fetch(`${API_URL}/${idContenedor}`);
         if (resDatos.ok) {
             const datos = await resDatos.json();
+            document.getElementById('editTopic').value = datos.topic_mqtt;
             inputNombre.value = datos.nombre;
             selectPiso.value = datos.piso;
             inputAltura.value = datos.altura_cm;

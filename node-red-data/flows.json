@@ -115,7 +115,7 @@
         "type": "function",
         "z": "d547f7af47639184",
         "name": "Preparando SELECT",
-        "func": "let partesTopic = msg.topic.split('/');\nlet idContenedor = partesTopic[partesTopic.length - 1]; \n\nmsg.id_contenedor = idContenedor;\nmsg.distancia_cruda = parseFloat(msg.payload);\nmsg.url = \"http://backend:3000/api/contenedores/\" + idContenedor +\"/altura\";\nmsg.method = \"GET\";\n\nreturn msg;",
+        "func": "let partesTopic = msg.topic.split('/');\nlet topic = partesTopic[partesTopic.length - 1]; \n\nmsg.distancia_cruda = parseFloat(msg.payload);\n\nmsg.url = \"http://backend:3000/api/contenedores/topic/\" + topic;\nmsg.method = \"GET\";\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -123,7 +123,7 @@
         "finalize": "",
         "libs": [],
         "x": 220,
-        "y": 260,
+        "y": 240,
         "wires": [
             [
                 "b565115d63dfea87"
@@ -173,8 +173,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 530,
-        "y": 180,
+        "x": 610,
+        "y": 200,
         "wires": [
             [
                 "8be3e8d483c8ea10"
@@ -189,7 +189,7 @@
         "type": "function",
         "z": "d547f7af47639184",
         "name": "function 3",
-        "func": "let idContenedor = msg.id_contenedor;\nmsg.url = `http://backend:3000/api/contenedores/${idContenedor}/altura`;\nmsg.method = \"PUT\";\n\n// Le mandamos la distancia actual como un JSON en el body\nmsg.payload = {\n    altura_cm: msg.distancia_cruda\n};\n\nreturn msg;",
+        "func": "let idContenedor = msg.payload.id;\nmsg.url = `http://backend:3000/api/contenedores/${idContenedor}/altura`;\nmsg.method = \"PUT\";\n\nmsg.payload = {\n    altura_cm: msg.distancia_cruda\n};\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -209,7 +209,7 @@
         "type": "function",
         "z": "d547f7af47639184",
         "name": "function 4",
-        "func": "if (msg.payload && msg.payload.altura_cm) {\n    let altura_real = msg.payload.altura_cm;\n    let distancia = msg.distancia_cruda;\n    \n    let porcentaje = 100.0 - ((distancia / altura_real) * 100.0);\n\n    if (porcentaje >= -15 && porcentaje < 0) {\n        porcentaje = 0;\n    }\n    else if (porcentaje < -15) {\n        return null; \n    }\n    \n    if (porcentaje > 100) {\n        porcentaje = 100;\n    }\n\n    msg.payload = [\n        {\n            distancia_cm: distancia,\n            porcentaje_llenado: Math.round(porcentaje)\n        },\n        {\n            contenedor_id: msg.id_contenedor\n        }\n    ];\n    \n    return msg;\n} else {\n    node.warn(\"El contenedor \" + msg.id_contenedor + \" no está registrado.\");\n    return null; \n}",
+        "func": "if (msg.payload && msg.payload.altura_cm) {\n    let altura_real = msg.payload.altura_cm;\n    let distancia = msg.distancia_cruda;\n    let id_numerico = msg.payload.id;\n    let nombre_contenedor = msg.payload.nombre;\n    \n    let porcentaje = 100.0 - ((distancia / altura_real) * 100.0);\n\n    if (porcentaje >= -15 && porcentaje < 0) {\n        porcentaje = 0;\n    }\n    else if (porcentaje < -15) {\n        return null; \n    }\n    \n    if (porcentaje > 100) {\n        porcentaje = 100;\n    }\n\n    msg.payload = [\n        {\n            distancia_cm: distancia,\n            porcentaje_llenado: Math.round(porcentaje)\n        },\n        {\n            contenedor_id: id_numerico\n        }\n    ];\n    msg.nombre_contenedor = nombre_contenedor;\n    return msg;\n} else {\n    node.warn(\"Contenedor no registrado o inactivo en la base de datos.\");\n    return null; \n}",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -217,7 +217,7 @@
         "finalize": "",
         "libs": [],
         "x": 720,
-        "y": 300,
+        "y": 240,
         "wires": [
             [
                 "27c5fd0ba4c96655",
@@ -271,7 +271,7 @@
         "type": "debug",
         "z": "d547f7af47639184",
         "name": "debug 3",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -279,7 +279,7 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 940,
+        "x": 960,
         "y": 200,
         "wires": []
     },
@@ -305,7 +305,7 @@
         "type": "function",
         "z": "d547f7af47639184",
         "name": "verificar_umbral",
-        "func": "const UMBRAL = 80;\nconst MI_CHAT_ID = env.get(\"TELEGRAM_CHAT_ID\");\n\nconst porcentaje = msg.payload[0].porcentaje_llenado;\nconst contenedorId = msg.payload[1].contenedor_id;\n\nconst yaAlertado = flow.get('alertado_' + contenedorId) || false;\n\nif (porcentaje >= UMBRAL && !yaAlertado) {\n    flow.set('alertado_' + contenedorId, true);\n    msg.payload = {\n        chatId: MI_CHAT_ID,\n        type: \"message\",\n        content: `ALERTA: el contenedor ${contenedorId} está al ${porcentaje}% de su capacidad.`\n    };\n    return msg;\n} else if (porcentaje < 20 && yaAlertado) {\n    flow.set('alertado_' + contenedorId, false);\n    msg.payload = {\n        chatId: MI_CHAT_ID,\n        type: \"message\",\n        content: `El contenedor ${contenedorId} fue VACIADO.`\n    };\n    return msg;\n} else {\n    return null;\n}",
+        "func": "const UMBRAL = 80;\nconst MI_CHAT_ID = env.get(\"TELEGRAM_CHAT_ID\");\n\nconst porcentaje = msg.payload[0].porcentaje_llenado;\nconst contenedorId = msg.payload[1].contenedor_id;\nconst nombre = msg.nombre_contenedor;\nconst yaAlertado = flow.get('alertado_' + contenedorId) || false;\n\nif (porcentaje >= UMBRAL && !yaAlertado) {\n    flow.set('alertado_' + contenedorId, true);\n    msg.payload = {\n        chatId: MI_CHAT_ID,\n        type: \"message\",\n        content: `ALERTA: el contenedor ${nombre} está al ${porcentaje}% de su capacidad.`\n    };\n    return msg;\n} else if (porcentaje < 20 && yaAlertado) {\n    flow.set('alertado_' + contenedorId, false);\n    msg.payload = {\n        chatId: MI_CHAT_ID,\n        type: \"message\",\n        content: `El contenedor ${nombre} fue VACIADO.`\n    };\n    return msg;\n} else {\n    return null;\n}",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -316,7 +316,8 @@
         "y": 360,
         "wires": [
             [
-                "45d73486f8a3446d"
+                "45d73486f8a3446d",
+                "fd8c241b4584bee4"
             ]
         ]
     },
@@ -349,6 +350,23 @@
         "statusType": "auto",
         "x": 340,
         "y": 60,
+        "wires": []
+    },
+    {
+        "id": "fd8c241b4584bee4",
+        "type": "debug",
+        "z": "d547f7af47639184",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1230,
+        "y": 360,
         "wires": []
     }
 ]

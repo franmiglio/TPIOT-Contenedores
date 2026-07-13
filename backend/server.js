@@ -26,7 +26,7 @@ const influx = new Influx.InfluxDB({
 
 app.get('/api/contenedores/estado', async (req, res) => {
     try {
-        const pgResult = await pgPool.query('SELECT id, nombre, altura_cm, longitud, latitud, piso FROM contenedores WHERE activo = true');
+        const pgResult = await pgPool.query('SELECT id, topic_mqtt, nombre, altura_cm, longitud, latitud, piso FROM contenedores WHERE activo = true');
         const contenedores = pgResult.rows;
 
         const influxQuery = `SELECT LAST("porcentaje_llenado") AS porcentaje FROM "estado_contenedores" GROUP BY "contenedor_id"`;
@@ -38,7 +38,7 @@ app.get('/api/contenedores/estado', async (req, res) => {
         }
 
         const estadoFinal = contenedores.map(contenedor => {
-            const telemetria = influxResult.find(r => r.contenedor_id === contenedor.id);
+            const telemetria = influxResult.find(r => String(r.contenedor_id) === String(contenedor.id));
             return {
                 ...contenedor,
                 porcentaje: telemetria ? Math.round(telemetria.porcentaje) : 0
@@ -72,16 +72,16 @@ app.get('/api/contenedores/:id/altura', async (req, res) => {
 });
 
 app.post('/api/contenedores', async (req, res) => {
-    const { id, nombre, altura_cm, latitud, longitud, piso } = req.body;
+    const { topic_mqtt, nombre, altura_cm, latitud, longitud, piso } = req.body;
     
     try {
         const query = `
-            INSERT INTO contenedores (id, nombre, altura_cm, latitud, longitud, piso) 
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO contenedores (topic_mqtt, nombre, altura_cm, latitud, longitud, piso) 
+            VALUES ($1, $2, $3, $4, $5, $6) RETURNING id
         `;
         const alturaDb = altura_cm === "" ? null : altura_cm;
         
-        const valores = [id, nombre, alturaDb, latitud || null, longitud || null, piso];
+        const valores = [topic_mqtt, nombre, alturaDb, latitud || null, longitud || null, piso];
         
         await pgPool.query(query, valores);
         res.status(201).json({ mensaje: "Contenedor registrado correctamente" });
@@ -124,7 +124,7 @@ app.put('/api/contenedores/:id/altura', async (req, res) => {
 app.get('/api/contenedores/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const result = await pgPool.query('SELECT nombre, piso, altura_cm FROM contenedores WHERE id = $1', [id]);
+        const result = await pgPool.query('SELECT topic_mqtt, nombre, piso, altura_cm FROM contenedores WHERE id = $1', [id]);
         if (result.rows.length > 0) {
             res.json(result.rows[0]);
         } else {
@@ -186,6 +186,23 @@ app.put('/api/contenedores/:id/desactivar', async (req, res) => {
         res.json({ mensaje: "Contenedor eliminado lógicamente" });
     } catch (error) {
         res.status(500).json({ error: "Error al eliminar el contenedor" });
+    }
+});
+app.get('/api/contenedores/topic/:topic', async (req, res) => {
+    const { topic } = req.params;
+    try {
+        const result = await pgPool.query(
+            'SELECT id, nombre, altura_cm, en_calibracion FROM contenedores WHERE topic_mqtt = $1 AND activo = true',
+            [topic]
+        );
+        
+        if (result.rows.length > 0) {
+            res.json(result.rows[0]);
+        } else {
+            res.status(404).json({ error: "Contenedor no encontrado o inactivo" });
+        }
+    } catch (error) {
+        res.status(500).json({ error: "Error en el servidor" });
     }
 });
 app.listen(3000, () => {

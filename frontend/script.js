@@ -107,7 +107,7 @@ function mostrarMensaje(texto) {
 async function guardarContenedor(event) {
     event.preventDefault();
     const nuevoContenedor = {
-        id: document.getElementById('contenedorId').value,
+        topic_mqtt: document.getElementById('nuevoTopic').value,
         nombre: document.getElementById('contenedorNombre').value,
         altura_cm: document.getElementById('contenedorAltura').value || null,
         latitud: document.getElementById('contenedorLat').value || null,
@@ -173,7 +173,7 @@ async function cargarContenedores() {
                 <tr>
                     <td>
                     <b style="font-size: 15px;">${contenedor.nombre}</b><br>
-                    <small style="color: #6c757d;">ID: ${contenedor.id}</small>
+                    <small style="color: #6c757d;">Topic MQTT: ${contenedor.topic_mqtt}</small>
                     </td>
                     <td>${contenedor.altura_cm ? contenedor.altura_cm : 'Sin calibrar'}</td>
                     <td><span class="status-badge ${colorClass}">${llenadoTexto}</span></td>

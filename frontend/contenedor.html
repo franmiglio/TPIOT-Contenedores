@@ -30,12 +30,16 @@
                 <h3>Editar Datos</h3>
                 <form id="formEditarContenedor">
                     <div class="form-group">
+                    <label>Topic MQTT</label>
+                    <input type="text" id="editTopic" readonly>
+                    </div>
+                    <div class="form-group">
                         <label>Nombre / Ubicación</label>
                         <input type="text" id="editNombre" required>
                     </div>
                     <div class="form-group">
                         <label>Altura</label>
-                        <input type="number" step="0.1" id="editAltura">
+                        <input type="number" step="any" id="editAltura">
                     </div>
                     <div class="form-group">
                         <label>Piso</label>
