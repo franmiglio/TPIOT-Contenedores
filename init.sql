@@ -6,5 +6,6 @@ CREATE TABLE IF NOT EXISTS contenedores (
     longitud NUMERIC(14, 6),
     piso VARCHAR(50),
     en_calibracion BOOLEAN DEFAULT FALSE,
+    activo BOOLEAN DEFAULT TRUE,
     fecha_instalacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

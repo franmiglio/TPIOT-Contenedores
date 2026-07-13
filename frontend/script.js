@@ -36,22 +36,59 @@ function cancelarModoInsercion() {
     document.getElementById('textoInstruccion').style.display = 'none';
     document.getElementById('mapa').style.cursor = '';
 }
+let modoReubicacionActivo = false;
+let idContenedorAReubicar = null;
 
-map.on('click', function(e) {
-if (!modoInsercionActivo) return; 
+function activarModoReubicacion(id, nombre) {
+    modoReubicacionActivo = true;
+    idContenedorAReubicar = id;
+    map.closePopup();
+    document.getElementById('btnActivarMapa').style.display = 'none';
+    document.getElementById('textoInstruccion').innerHTML = `Hacé clic en el mapa para reubicar <b>${nombre}</b>... <a href="#" onclick="cancelarModoReubicacion()" style="color: #6c757d; margin-left:10px;">(Cancelar)</a>`;
+    document.getElementById('textoInstruccion').style.display = 'inline-block';
+    document.getElementById('mapa').style.cursor = 'crosshair';
+}
+
+function cancelarModoReubicacion() {
+    modoReubicacionActivo = false;
+    idContenedorAReubicar = null;
+    
+    document.getElementById('btnActivarMapa').style.display = 'inline-block';
+    document.getElementById('textoInstruccion').innerHTML = `Hacé clic en el mapa para ubicar el contenedor... <a id="cancelarAgregar" href="#" onclick="cancelarModoInsercion()">(Cancelar)</a>`;
+    document.getElementById('textoInstruccion').style.display = 'none';
+    document.getElementById('mapa').style.cursor = '';
+}
+map.on('click', async function(e) {
+    if (!modoInsercionActivo && !modoReubicacionActivo) return; 
 
     const lat = Math.round(e.latlng.lat);
     const lng = Math.round(e.latlng.lng); 
     
     if(lat >= 0 && lat <= altoImagen && lng >= 0 && lng <= anchoImagen) {
         
-        document.getElementById('contenedorLat').value = lat;
-        document.getElementById('contenedorLng').value = lng;
-        
-        abrirModalNuevoContenedor();
-        
-        cancelarModoInsercion();
-        
+        if (modoInsercionActivo) {
+            document.getElementById('contenedorLat').value = lat;
+            document.getElementById('contenedorLng').value = lng;
+            abrirModalNuevoContenedor();
+            cancelarModoInsercion();
+            
+        } else if (modoReubicacionActivo) {
+            try {
+                const respuesta = await fetch(`${API_URL}/${idContenedorAReubicar}/ubicacion`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ latitud: lat, longitud: lng })
+                });
+                
+                if (respuesta.ok) {
+                    mostrarMensaje('¡Ubicación actualizada exitosamente!');
+                    cargarContenedores();
+                }
+            } catch (error) { 
+                console.error("Error al reubicar:", error); 
+            }
+            cancelarModoReubicacion();
+        }
     }
 });
 
@@ -134,12 +171,14 @@ async function cargarContenedores() {
 
             const fila = `
                 <tr>
-                    <td>${contenedor.id}</td>
-                    <td>${contenedor.nombre}</td>
+                    <td>
+                    <b style="font-size: 15px;">${contenedor.nombre}</b><br>
+                    <small style="color: #6c757d;">ID: ${contenedor.id}</small>
+                    </td>
                     <td>${contenedor.altura_cm ? contenedor.altura_cm : 'Sin calibrar'}</td>
                     <td><span class="status-badge ${colorClass}">${llenadoTexto}</span></td>
                     <td>${contenedor.piso || '-'}</td>
-                    <td><button class="btn" style="background:#17a2b8;" onclick="calibrarContenedor('${contenedor.id}')">Calibrar</button></td>
+                    <td><button class="btn btn-action" onclick="abrirModalCalibrar('${contenedor.id}', '${contenedor.nombre}')">Calibrar</button></td>
                 </tr>
             `;
             tbody.innerHTML += fila;
@@ -164,9 +203,10 @@ async function cargarContenedores() {
 
                 marcador.bindPopup(`
                     <div style="text-align: center;">
-                        <b style="font-size: 14px;">${contenedor.nombre}</b><br><br>
+                        <b>${contenedor.nombre}</b><br><br>
                         Nivel actual: <span class="status-badge ${colorClass}">${llenadoTexto}</span><br><br>
-                        <a href="contenedor.html?id=${contenedor.id}" class="btn" style="background-color: #007bff; text-decoration: none; display: block; color: white;">Ver Detalles</a>
+                        <button class="btn btn-action" style="margin: 0 auto;"onclick="window.location.href='contenedor.html?id=${contenedor.id}'">Ver Detalles</button>
+                        <button id="btn-reubicar"class="btn btn-action" onclick="activarModoReubicacion('${contenedor.id}', '${contenedor.nombre}')"> Mover</button>
                     </div>
                 `);
 
@@ -177,13 +217,28 @@ async function cargarContenedores() {
         console.error("Error al cargar los datos:", error);
     }
 }
-async function calibrarContenedor(id) {
-    if(!confirm(`Asegurate de que el contenedor ${id} esté VACÍO. ¿Comenzar calibración?`)) return;
+function abrirModalCalibrar(id, nombre) {
+    document.getElementById('nombreContenedorCalibrar').innerText = `"${nombre}"`;
+    
+    const btnConfirmar = document.getElementById('btnConfirmarCalibrar');
+    btnConfirmar.onclick = function() {
+        ejecutarCalibracion(id, nombre);
+    };
+    
+    document.getElementById('modalCalibrar').style.display = 'block';
+}
 
+function cerrarModalCalibrar() {
+    document.getElementById('modalCalibrar').style.display = 'none';
+}
+
+async function ejecutarCalibracion(id, nombre) {
+    cerrarModalCalibrar();
+    
     try {
         const respuesta = await fetch(`${API_URL}/${id}/calibrar`, { method: 'PUT' });
         if (respuesta.ok) {
-            mostrarMensaje(`Calibrando ${id}... El próximo dato del sensor definirá la altura.`);
+            mostrarMensaje(`Calibrando "${nombre}"... El próximo dato del sensor definirá la altura.`);
             cargarContenedores();
         }
     } catch (error) {

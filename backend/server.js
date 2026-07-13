@@ -26,7 +26,7 @@ const influx = new Influx.InfluxDB({
 
 app.get('/api/contenedores/estado', async (req, res) => {
     try {
-        const pgResult = await pgPool.query('SELECT id, nombre, altura_cm, longitud, latitud, piso FROM contenedores');
+        const pgResult = await pgPool.query('SELECT id, nombre, altura_cm, longitud, latitud, piso FROM contenedores WHERE activo = true');
         const contenedores = pgResult.rows;
 
         const influxQuery = `SELECT LAST("porcentaje_llenado") AS porcentaje FROM "estado_contenedores" GROUP BY "contenedor_id"`;
@@ -167,6 +167,25 @@ app.get('/api/contenedores/:id/estadisticas', async (req, res) => {
     } catch (error) {
         console.error("Error en InfluxDB:", error);
         res.status(500).json({ error: "Error al calcular estadísticas" });
+    }
+});
+app.put('/api/contenedores/:id/ubicacion', async (req, res) => {
+    const { id } = req.params;
+    const { latitud, longitud } = req.body;
+    try {
+        await pgPool.query('UPDATE contenedores SET latitud = $1, longitud = $2 WHERE id = $3', [latitud, longitud, id]);
+        res.json({ mensaje: "Ubicación actualizada correctamente" });
+    } catch (error) {
+        res.status(500).json({ error: "Error al actualizar la ubicación" });
+    }
+});
+app.put('/api/contenedores/:id/desactivar', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pgPool.query('UPDATE contenedores SET activo = false WHERE id = $1', [id]);
+        res.json({ mensaje: "Contenedor eliminado lógicamente" });
+    } catch (error) {
+        res.status(500).json({ error: "Error al eliminar el contenedor" });
     }
 });
 app.listen(3000, () => {

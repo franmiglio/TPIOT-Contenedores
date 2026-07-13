@@ -8,6 +8,14 @@
         "env": []
     },
     {
+        "id": "c35486fdf4095615",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
         "id": "8a8d42f596ef2b29",
         "type": "mqtt-broker",
         "name": "mqtt",
@@ -201,7 +209,7 @@
         "type": "function",
         "z": "d547f7af47639184",
         "name": "function 4",
-        "func": "if (msg.payload && msg.payload.altura_cm) {\n    let altura_real = msg.payload.altura_cm;\n    let distancia = msg.distancia_cruda;\n    \n\n    let porcentaje = 100.0 - ((distancia / altura_real) * 100.0);\n    \n\n    if (porcentaje < 0) porcentaje = 0;\n    if (porcentaje > 100) porcentaje = 100;\n\n\n    msg.payload = [\n        {\n            distancia_cm: distancia,\n            porcentaje_llenado: Math.round(porcentaje)\n        },\n        {\n            contenedor_id: msg.id_contenedor\n        }\n    ];\n    \n    return msg;\n} else {\n    // Si el contenedor no está en la base de datos (Postgres), abortamos\n    node.warn(\"El contenedor \" + msg.contenedor_id + \" no está registrado en el sistema.\");\n    return null; \n}",
+        "func": "if (msg.payload && msg.payload.altura_cm) {\n    let altura_real = msg.payload.altura_cm;\n    let distancia = msg.distancia_cruda;\n    \n    let porcentaje = 100.0 - ((distancia / altura_real) * 100.0);\n\n    if (porcentaje >= -15 && porcentaje < 0) {\n        porcentaje = 0;\n    }\n    else if (porcentaje < -15) {\n        return null; \n    }\n    \n    if (porcentaje > 100) {\n        porcentaje = 100;\n    }\n\n    msg.payload = [\n        {\n            distancia_cm: distancia,\n            porcentaje_llenado: Math.round(porcentaje)\n        },\n        {\n            contenedor_id: msg.id_contenedor\n        }\n    ];\n    \n    return msg;\n} else {\n    node.warn(\"El contenedor \" + msg.id_contenedor + \" no está registrado.\");\n    return null; \n}",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -320,8 +328,8 @@
         "bot": "87e4aeee429d87e6",
         "haserroroutput": false,
         "outputs": 1,
-        "x": 990,
-        "y": 440,
+        "x": 1110,
+        "y": 460,
         "wires": [
             []
         ]
@@ -335,7 +343,8 @@
         "tosidebar": true,
         "console": false,
         "tostatus": false,
-        "complete": "false",
+        "complete": "payload",
+        "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
         "x": 340,

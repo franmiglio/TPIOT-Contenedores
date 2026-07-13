@@ -21,7 +21,7 @@
 
     <div id="selector">
         <label id="label-piso">Viendo piso:</label>
-        <select id="filtroPiso" onchange="cargarContenedores()">
+        <select id="filtroPiso" class="selectorPiso" onchange="cargarContenedores()">
             <option value="Todos">Todos los pisos</option>
             <option value="Planta Baja">Planta Baja</option>
             <option value="Primer Piso">Primer Piso</option>
@@ -36,8 +36,7 @@
     <table>
         <thead>
             <tr>
-                <th>ID Contenedor</th>
-                <th>Ubicación</th>
+                <th>Contenedor</th>
                 <th>Altura (cm)</th>
                 <th>Llenado</th>
                 <th>Piso</th>
@@ -67,7 +66,7 @@
             </div>
             <div class="form-group">
                 <label>Piso</label>
-                <select id="contenedorPiso" required>
+                <select id="contenedorPiso" class="selectorPiso" required>
                     <option value="Planta Baja">Planta Baja</option>
                     <option value="Primer Piso">Primer Piso</option>
                     <option value="Segundo Piso">Segundo Piso</option>
@@ -88,7 +87,20 @@
         </form>
     </div>
 </div>
-
+<div id="modalCalibrar" class="modal">
+    <div class="modal-content modal-confirmar">
+        <h3>Calibrar Sensor</h3>
+        <p>
+            Asegurate de que el contenedor <br>
+            <b id="nombreContenedorCalibrar"></b><br>
+            esté <strong>COMPLETAMENTE VACÍO</strong>.
+        </p>
+        <div style="display: flex; justify-content: center; gap: 15px;">
+            <button class="btn btn-cancel" onclick="cerrarModalCalibrar()">Cancelar</button>
+            <button class="btn" id="btnConfirmarCalibrar">Sí, comenzar</button>
+        </div>
+    </div>
+</div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="script.js"></script>
 </body>
