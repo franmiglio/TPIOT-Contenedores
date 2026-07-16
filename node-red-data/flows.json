@@ -288,7 +288,7 @@
         "type": "debug",
         "z": "d547f7af47639184",
         "name": "debug 2",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -313,7 +313,7 @@
         "finalize": "",
         "libs": [],
         "x": 940,
-        "y": 360,
+        "y": 380,
         "wires": [
             [
                 "45d73486f8a3446d",
@@ -329,8 +329,8 @@
         "bot": "87e4aeee429d87e6",
         "haserroroutput": false,
         "outputs": 1,
-        "x": 1110,
-        "y": 460,
+        "x": 1130,
+        "y": 440,
         "wires": [
             []
         ]

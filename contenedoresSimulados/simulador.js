@@ -4,7 +4,7 @@ const cliente = mqtt.connect('mqtt://localhost:1883');
 
 const tachos = [
     { id: 'contenedor2', distanciaActual: 80, alturaMaxima: 90 },
-    { id: 'contenedor_3', distanciaActual: 60, alturaMaxima: 90 },
+    { id: 'contenedores_3', distanciaActual: 60, alturaMaxima: 90 },
     { id: 'contenedor_p2_1', distanciaActual: 30, alturaMaxima: 90 }
 ];
 

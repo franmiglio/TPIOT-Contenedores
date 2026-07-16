@@ -2,12 +2,10 @@
 #include <PubSubClient.h>
 #include <WiFiManager.h>
 
-// Configuración de MQTT
-const char* mqtt_server = "192.168.1.36"; 
+const char* mqtt_server = "10.149.53.19"; 
 const int mqtt_port = 1883;
 const char* mqtt_topic = "facultad/contenedores/contenedor_1";
 
-// Configuración del Sensor HC-SR04
 const int trigPin = 5;
 const int echoPin = 18;
 const float VELOCIDAD_SONIDO = 0.034;
@@ -34,13 +32,12 @@ void setup() {
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
   
-  // --- CONFIGURACIÓN DE WIFIMANAGER ---
   WiFiManager wm;
   bool resultado = wm.autoConnect("TachoInteligente_AP");
   
   if(!resultado) {
     Serial.println("Fallo en la conexión o tiempo de espera agotado");
-    ESP.restart(); // Si falla, reinicia el ESP32 para volver a intentar
+    ESP.restart(); 
   } 
   
   Serial.println("¡Conectado exitosamente a la red Wi-Fi!");
@@ -54,7 +51,6 @@ void loop() {
   }
   client.loop();
 
-  // --- LECTURA DEL SENSOR ---
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
   digitalWrite(trigPin, HIGH);
@@ -64,7 +60,6 @@ void loop() {
   long duracion = pulseIn(echoPin, HIGH);
   float distancia_cm = (duracion * VELOCIDAD_SONIDO) / 2;
   
-  // --- PUBLICAR EN MQTT ---
   String payload = String(distancia_cm);
   client.publish(mqtt_topic, payload.c_str());
   
